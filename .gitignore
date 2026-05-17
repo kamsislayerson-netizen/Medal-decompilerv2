@@ -1,0 +1,13 @@
+# Rust build output
+/target/
+
+# Environment files
+.env
+.env.*
+
+# Node dependencies
+/node_modules/
+
+# Python caches
+__pycache__/
+*.py[cod]
