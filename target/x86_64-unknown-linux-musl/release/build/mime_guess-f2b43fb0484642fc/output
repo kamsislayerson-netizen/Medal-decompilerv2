@@ -1,0 +1,1 @@
+cargo:rustc-env=MIME_TYPES_GENERATED_PATH=/workspaces/Medal-decompilerv2/target/x86_64-unknown-linux-musl/release/build/mime_guess-f2b43fb0484642fc/out/mime_types_generated.rs
