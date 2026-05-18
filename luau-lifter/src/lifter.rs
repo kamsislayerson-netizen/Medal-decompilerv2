@@ -1280,6 +1280,7 @@ impl<'a> Lifter<'a> {
                     }
                     _ => unreachable!("{:?}", instruction),
                 },
+                #[allow(unreachable_patterns)]
                 _ => unimplemented!("{:?}", instruction),
             }
         }
