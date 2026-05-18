@@ -11,7 +11,7 @@ pub struct Chunk<'a> {
     pub function: Function<'a>,
 }
 impl<'a> Chunk<'a> {
-    pub fn parse(input: &'a [u8]) -> IResult<&[u8], Self> {
+    pub fn parse(input: &'a [u8]) -> IResult<&'a [u8], Self> {
         let (input, header) = Header::parse(input)?;
         assert_eq!(header.version_number, 0x51);
         assert_eq!(header.format, Format::Official);
