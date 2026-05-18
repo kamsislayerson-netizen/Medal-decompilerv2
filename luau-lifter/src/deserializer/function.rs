@@ -1,7 +1,4 @@
-use core::num;
-
 use nom::{
-    complete::take,
     number::complete::{le_u32, le_u8},
     IResult,
 };
@@ -20,14 +17,17 @@ pub struct Function {
     pub num_parameters: u8,
     pub num_upvalues: u8,
     pub is_vararg: bool,
-    //pub instructions: Vec<u32>,
     pub instructions: Vec<Instruction>,
     pub constants: Vec<Constant>,
     pub functions: Vec<usize>,
+    #[allow(dead_code)]
     pub line_defined: usize,
     pub function_name: usize,
+    #[allow(dead_code)]
     pub line_gap_log2: Option<u8>,
+    #[allow(dead_code)]
     pub line_info_delta: Option<Vec<u8>>,
+    #[allow(dead_code)]
     pub abs_line_info_delta: Option<Vec<u32>>,
 }
 
@@ -116,11 +116,10 @@ impl Function {
         let (input, num_upvalues) = le_u8(input)?;
         let (input, is_vararg) = le_u8(input)?;
 
-        let (input, flags) = le_u8(input)?;
+        let (input, _flags) = le_u8(input)?;
         let (input, _) = parse_list(input, le_u8)?;
 
         let (input, u32_instructions) = parse_list(input, le_u32)?;
-        //let (input, instructions) = parse_list(input, Function::parse_instrution)?;
         let instructions = Self::parse_instructions(&u32_instructions, encode_key);
         let (input, constants) = parse_list(input, Constant::parse)?;
         let (input, functions) = parse_list(input, leb128_usize)?;
@@ -157,18 +156,21 @@ impl Function {
             (input, 0) => input,
             (input, _) => {
                 panic!("we have debug info");
-                let (mut input, num_locvars) = leb128_usize(input)?;
-                for _ in 0..num_locvars {
-                    (input, _) = leb128_usize(input)?;
-                    (input, _) = leb128_usize(input)?;
-                    (input, _) = leb128_usize(input)?;
-                    (input, _) = le_u8(input)?;
+                #[allow(unreachable_code)]
+                {
+                    let (mut input, num_locvars) = leb128_usize(input)?;
+                    for _ in 0..num_locvars {
+                        (input, _) = leb128_usize(input)?;
+                        (input, _) = leb128_usize(input)?;
+                        (input, _) = leb128_usize(input)?;
+                        (input, _) = le_u8(input)?;
+                    }
+                    let (mut input, num_upvalues) = leb128_usize(input)?;
+                    for _ in 0..num_upvalues {
+                        (input, _) = leb128_usize(input)?;
+                    }
+                    input
                 }
-                let (mut input, num_upvalues) = leb128_usize(input)?;
-                for _ in 0..num_upvalues {
-                    (input, _) = leb128_usize(input)?;
-                }
-                input
             }
         };
         Ok((
