@@ -18,6 +18,7 @@ use petgraph::{stable_graph::NodeIndex, visit::EdgeRef, Direction};
 
 use triomphe::Arc;
 
+#[allow(dead_code)]
 pub struct Lifter<'a, 'b> {
     bytecode: &'a BytecodeFunction<'a>,
     nodes: FxHashMap<usize, NodeIndex>,
@@ -29,6 +30,7 @@ pub struct Lifter<'a, 'b> {
     lifted_functions: &'b mut Vec<(Arc<Mutex<ast::Function>>, Function, Vec<RcLocal>)>,
 }
 
+#[allow(dead_code)]
 impl<'a, 'b> Lifter<'a, 'b> {
     fn allocate_locals(&mut self) {
         self.upvalues
