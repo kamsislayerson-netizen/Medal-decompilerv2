@@ -166,10 +166,12 @@ impl<'a, 'b> Lifter<'a, 'b> {
                     destination,
                     source,
                 } => {
+                    let Some(dest_local) = self.locals.get(destination).cloned() else { continue; };
+                    let Some(src_local) = self.locals.get(source).cloned() else { continue; };
                     statements.push(
                         ast::Assign::new(
-                            vec![self.locals[destination].clone().into()],
-                            vec![self.locals[source].clone().into()],
+                            vec![dest_local.into()],
+                            vec![src_local.into()],
                         )
                         .into(),
                     );
@@ -177,9 +179,10 @@ impl<'a, 'b> Lifter<'a, 'b> {
                 &Instruction::LoadBoolean {
                     destination, value, ..
                 } => {
+                    let Some(dest_local) = self.locals.get(&destination).cloned() else { continue; };
                     statements.push(
                         ast::Assign::new(
-                            vec![self.locals[&destination].clone().into()],
+                            vec![dest_local.into()],
                             vec![ast::Literal::Boolean(value).into()],
                         )
                         .into(),
@@ -189,9 +192,10 @@ impl<'a, 'b> Lifter<'a, 'b> {
                     destination,
                     source,
                 } => {
+                    let Some(dest_local) = self.locals.get(&destination).cloned() else { continue; };
                     statements.push(
                         ast::Assign::new(
-                            vec![self.locals[&destination].clone().into()],
+                            vec![dest_local.into()],
                             vec![self.constant(source).into()],
                         )
                         .into(),
@@ -199,9 +203,10 @@ impl<'a, 'b> Lifter<'a, 'b> {
                 }
                 Instruction::LoadNil(registers) => {
                     for register in registers {
+                        let Some(local) = self.locals.get(register).cloned() else { continue; };
                         statements.push(
                             ast::Assign::new(
-                                vec![self.locals[register].clone().into()],
+                                vec![local.into()],
                                 vec![ast::Literal::Nil.into()],
                             )
                             .into(),
@@ -212,21 +217,23 @@ impl<'a, 'b> Lifter<'a, 'b> {
                     destination,
                     global,
                 } => {
+                    let Some(dest_local) = self.locals.get(&destination).cloned() else { continue; };
                     let global_str = self.constant(global).as_string().unwrap().clone();
                     statements.push(
                         ast::Assign::new(
-                            vec![self.locals[&destination].clone().into()],
+                            vec![dest_local.into()],
                             vec![ast::Global::new(global_str).into()],
                         )
                         .into(),
                     );
                 }
                 &Instruction::SetGlobal { destination, value } => {
+                    let Some(val_local) = self.locals.get(&value).cloned() else { continue; };
                     let global_str = self.constant(destination).as_string().unwrap().clone();
                     statements.push(
                         ast::Assign::new(
                             vec![ast::Global::new(global_str).into()],
-                            vec![self.locals[&value].clone().into()],
+                            vec![val_local.into()],
                         )
                         .into(),
                     );
@@ -236,11 +243,13 @@ impl<'a, 'b> Lifter<'a, 'b> {
                     object,
                     key,
                 } => {
+                    let Some(dest_local) = self.locals.get(&destination).cloned() else { continue; };
+                    let Some(obj_local) = self.locals.get(&object).cloned() else { continue; };
                     statements.push(
                         ast::Assign::new(
-                            vec![self.locals[&destination].clone().into()],
+                            vec![dest_local.into()],
                             vec![ast::Index::new(
-                                self.locals[&object].clone().into(),
+                                obj_local.into(),
                                 self.register_or_constant(key),
                             )
                             .into()],
@@ -249,7 +258,8 @@ impl<'a, 'b> Lifter<'a, 'b> {
                     );
                 }
                 &Instruction::Test { value, invert } => {
-                    let value = self.locals[&value].clone().into();
+                    let Some(val_local) = self.locals.get(&value).cloned() else { continue; };
+                    let value = val_local.into();
                     let condition = if invert {
                         ast::Unary::new(value, ast::UnaryOperation::Not).into()
                     } else {
@@ -264,11 +274,13 @@ impl<'a, 'b> Lifter<'a, 'b> {
                     destination,
                     operand,
                 } => {
+                    let Some(dest_local) = self.locals.get(destination).cloned() else { continue; };
+                    let Some(op_local) = self.locals.get(operand).cloned() else { continue; };
                     statements.push(
                         ast::Assign::new(
-                            vec![self.locals[destination].clone().into()],
+                            vec![dest_local.into()],
                             vec![ast::Unary::new(
-                                self.locals[operand].clone().into(),
+                                op_local.into(),
                                 ast::UnaryOperation::Not,
                             )
                             .into()],
@@ -280,11 +292,13 @@ impl<'a, 'b> Lifter<'a, 'b> {
                     destination,
                     operand,
                 } => {
+                    let Some(dest_local) = self.locals.get(destination).cloned() else { continue; };
+                    let Some(op_local) = self.locals.get(operand).cloned() else { continue; };
                     statements.push(
                         ast::Assign::new(
-                            vec![self.locals[destination].clone().into()],
+                            vec![dest_local.into()],
                             vec![ast::Unary::new(
-                                self.locals[operand].clone().into(),
+                                op_local.into(),
                                 ast::UnaryOperation::Length,
                             )
                             .into()],
@@ -296,11 +310,13 @@ impl<'a, 'b> Lifter<'a, 'b> {
                     destination,
                     operand,
                 } => {
+                    let Some(dest_local) = self.locals.get(destination).cloned() else { continue; };
+                    let Some(op_local) = self.locals.get(operand).cloned() else { continue; };
                     statements.push(
                         ast::Assign::new(
-                            vec![self.locals[destination].clone().into()],
+                            vec![dest_local.into()],
                             vec![ast::Unary::new(
-                                self.locals[operand].clone().into(),
+                                op_local.into(),
                                 ast::UnaryOperation::Negate,
                             )
                             .into()],
@@ -353,9 +369,10 @@ impl<'a, 'b> Lifter<'a, 'b> {
                     lhs,
                     rhs,
                 } => {
+                    let Some(dest_local) = self.locals.get(&destination).cloned() else { continue; };
                     statements.push(
                         ast::Assign::new(
-                            vec![self.locals[&destination].clone().into()],
+                            vec![dest_local.into()],
                             vec![ast::Binary::new(
                                 self.register_or_constant(lhs),
                                 self.register_or_constant(rhs),
@@ -379,25 +396,29 @@ impl<'a, 'b> Lifter<'a, 'b> {
                     operands,
                 } => {
                     assert!(operands.len() >= 2);
+                    let Some(dest_local) = self.locals.get(destination).cloned() else { continue; };
                     let mut operands = operands.into_iter().rev();
 
                     let right = operands.next().unwrap();
                     let left = operands.next().unwrap();
+                    let Some(left_local) = self.locals.get(left).cloned() else { continue; };
+                    let Some(right_local) = self.locals.get(right).cloned() else { continue; };
                     let mut concat = ast::Binary::new(
-                        self.locals[left].clone().into(),
-                        self.locals[right].clone().into(),
+                        left_local.into(),
+                        right_local.into(),
                         ast::BinaryOperation::Concat,
                     );
                     for r in operands {
+                        let Some(r_local) = self.locals.get(r).cloned() else { continue; };
                         concat = ast::Binary::new(
-                            self.locals[r].clone().into(),
+                            r_local.into(),
                             concat.into(),
                             ast::BinaryOperation::Concat,
                         );
                     }
                     statements.push(
                         ast::Assign::new(
-                            vec![self.locals[destination].clone().into()],
+                            vec![dest_local.into()],
                             vec![concat.into()],
                         )
                         .into(),
@@ -451,7 +472,9 @@ impl<'a, 'b> Lifter<'a, 'b> {
                     value,
                     invert,
                 } => {
-                    let value: ast::RValue = self.locals[value].clone().into();
+                    let Some(val_local) = self.locals.get(value).cloned() else { continue; };
+                    let Some(dest_local) = self.locals.get(destination).cloned() else { continue; };
+                    let value: ast::RValue = val_local.into();
                     statements.push(
                         ast::If::new(
                             if *invert {
@@ -470,7 +493,7 @@ impl<'a, 'b> Lifter<'a, 'b> {
                     );
 
                     let assign = ast::Assign::new(
-                        vec![self.locals[destination].clone().into()],
+                        vec![dest_local.into()],
                         vec![value.clone()],
                     );
 
@@ -485,9 +508,10 @@ impl<'a, 'b> Lifter<'a, 'b> {
                     object,
                     method,
                 } => {
-                    let destination = self.locals[&destination].clone();
-                    let self_arg = self.locals[&self_arg].clone();
-                    let object = self.locals[&object].clone();
+                    // Safe: use .get() so malformed bytecode doesn't panic
+                    let Some(destination) = self.locals.get(&destination).cloned() else { continue; };
+                    let Some(self_arg) = self.locals.get(&self_arg).cloned() else { continue; };
+                    let Some(object) = self.locals.get(&object).cloned() else { continue; };
                     statements.push(
                         ast::Assign::new(vec![self_arg.into()], vec![object.clone().into()]).into(),
                     );
@@ -511,19 +535,22 @@ impl<'a, 'b> Lifter<'a, 'b> {
                     arguments,
                     ..
                 } => {
+                    let Some(fn_local) = self.locals.get(&function).cloned() else { continue; };
                     let arguments = if arguments != 0 {
                         (function.0 + 1..function.0 + arguments)
-                            .map(|r| self.locals[&Register(r)].clone().into())
+                            .filter_map(|r| self.locals.get(&Register(r)).cloned())
+                            .map(|l| l.into())
                             .collect()
                     } else {
                         let top = top.take().unwrap();
                         (function.0 + 1..top.1)
-                            .map(|r| self.locals[&Register(r)].clone().into())
+                            .filter_map(|r| self.locals.get(&Register(r)).cloned())
+                            .map(|l| l.into())
                             .chain(std::iter::once(top.0))
                             .collect()
                     };
 
-                    let call = ast::Call::new(self.locals[&function].clone().into(), arguments);
+                    let call = ast::Call::new(fn_local.into(), arguments);
 
                     if let &Instruction::Call { return_values, .. } = instruction
                         && return_values != 0
@@ -534,7 +561,8 @@ impl<'a, 'b> Lifter<'a, 'b> {
                             statements.push(
                                 ast::Assign::new(
                                     (function.0..function.0 + return_values - 1)
-                                        .map(|r| self.locals[&Register(r)].clone().into())
+                                        .filter_map(|r| self.locals.get(&Register(r)).cloned())
+                                        .map(|l| l.into())
                                         .collect_vec(),
                                     vec![ast::RValue::Select(call.into())],
                                 )
@@ -549,10 +577,13 @@ impl<'a, 'b> Lifter<'a, 'b> {
                     destination,
                     upvalue,
                 } => {
+                    let Some(dest_local) = self.locals.get(destination).cloned() else { continue; };
+                    let upval_idx = upvalue.0 as usize;
+                    if upval_idx >= self.upvalues.len() { continue; }
                     statements.push(
                         ast::Assign::new(
-                            vec![self.locals[destination].clone().into()],
-                            vec![self.upvalues[upvalue.0 as usize].clone().into()],
+                            vec![dest_local.into()],
+                            vec![self.upvalues[upval_idx].clone().into()],
                         )
                         .into(),
                     );
@@ -561,10 +592,13 @@ impl<'a, 'b> Lifter<'a, 'b> {
                     destination,
                     source,
                 } => {
+                    let Some(src_local) = self.locals.get(source).cloned() else { continue; };
+                    let upval_idx = destination.0 as usize;
+                    if upval_idx >= self.upvalues.len() { continue; }
                     statements.push(
                         ast::Assign::new(
-                            vec![self.upvalues[destination.0 as usize].clone().into()],
-                            vec![self.locals[source].clone().into()],
+                            vec![self.upvalues[upval_idx].clone().into()],
+                            vec![src_local.into()],
                         )
                         .into(),
                     );
@@ -575,7 +609,8 @@ impl<'a, 'b> Lifter<'a, 'b> {
                         statements.push(
                             ast::Assign::new(
                                 (destination.0..destination.0 + b - 1)
-                                    .map(|r| self.locals[&Register(r)].clone().into())
+                                    .filter_map(|r| self.locals.get(&Register(r)).cloned())
+                                    .map(|l| l.into())
                                     .collect(),
                                 vec![ast::RValue::Select(vararg.into())],
                             )
@@ -590,20 +625,38 @@ impl<'a, 'b> Lifter<'a, 'b> {
                     destination,
                     function,
                 } => {
+                    let Some(dest_local) = self.locals.get(destination).cloned() else {
+                        // skip upvalue pseudo-instructions too
+                        let closure = &self.bytecode.closures[function.0 as usize];
+                        for _ in 0..closure.number_of_upvalues {
+                            iter.next();
+                        }
+                        continue;
+                    };
                     let closure = &self.bytecode.closures[function.0 as usize];
 
                     let mut upvalues_passed = Vec::with_capacity(closure.number_of_upvalues.into());
                     for _ in 0..closure.number_of_upvalues {
-                        let local = match iter.next().as_ref().unwrap() {
-                            Instruction::Move {
+                        let local = match iter.next().as_ref() {
+                            Some(Instruction::Move {
                                 destination: _,
                                 source,
-                            } => self.locals[source].clone(),
-                            Instruction::GetUpvalue {
+                            }) => {
+                                match self.locals.get(source).cloned() {
+                                    Some(l) => l,
+                                    None => continue,
+                                }
+                            }
+                            Some(Instruction::GetUpvalue {
                                 destination: _,
                                 upvalue,
-                            } => self.upvalues[upvalue.0 as usize].clone(),
-                            _ => panic!(),
+                            }) => {
+                                let idx = upvalue.0 as usize;
+                                if idx >= self.upvalues.len() { continue; }
+                                self.upvalues[idx].clone()
+                            }
+                            // Safe: skip unknown pseudo-instructions instead of panicking
+                            _ => continue,
                         };
                         upvalues_passed.push(local);
                     }
@@ -616,7 +669,7 @@ impl<'a, 'b> Lifter<'a, 'b> {
 
                     statements.push(
                         ast::Assign::new(
-                            vec![self.locals[destination].clone().into()],
+                            vec![dest_local.into()],
                             vec![ast::Closure {
                                 function: ByAddress(ast_function),
                                 upvalues: upvalues_passed
@@ -630,9 +683,10 @@ impl<'a, 'b> Lifter<'a, 'b> {
                     );
                 }
                 Instruction::NewTable { destination, .. } => {
+                    let Some(dest_local) = self.locals.get(destination).cloned() else { continue; };
                     statements.push(
                         ast::Assign::new(
-                            vec![self.locals[destination].clone().into()],
+                            vec![dest_local.into()],
                             vec![ast::Table::default().into()],
                         )
                         .into(),
@@ -643,24 +697,27 @@ impl<'a, 'b> Lifter<'a, 'b> {
                     number_of_elements,
                     block_number,
                 } => {
+                    let Some(table_local) = self.locals.get(&table).cloned() else { continue; };
                     const FIELDS_PER_FLUSH: usize = 50;
 
                     let setlist = if number_of_elements != 0 {
                         ast::SetList::new(
-                            self.locals[&table].clone(),
+                            table_local,
                             (block_number - 1) as usize * FIELDS_PER_FLUSH + 1,
                             (table.0 + 1..table.0 + 1 + number_of_elements)
-                                .map(|r| self.locals[&Register(r)].clone().into())
+                                .filter_map(|r| self.locals.get(&Register(r)).cloned())
+                                .map(|l| l.into())
                                 .collect(),
                             None,
                         )
                     } else {
                         let top = top.take().unwrap();
                         ast::SetList::new(
-                            self.locals[&table].clone(),
+                            table_local,
                             (block_number - 1) as usize * FIELDS_PER_FLUSH + 1,
                             (table.0 + 1..top.1)
-                                .map(|r| self.locals[&Register(r)].clone().into())
+                                .filter_map(|r| self.locals.get(&Register(r)).cloned())
+                                .map(|l| l.into())
                                 .collect(),
                             Some(top.0),
                         )
@@ -670,18 +727,19 @@ impl<'a, 'b> Lifter<'a, 'b> {
                 Instruction::Close(start) => {
                     // TODO: REFACTOR: self.locals.iter() + skip
                     let locals = (start.0..self.bytecode.maximum_stack_size)
-                        .map(|i| self.locals[&Register(i)].clone())
+                        .filter_map(|i| self.locals.get(&Register(i)).cloned())
                         .collect();
                     statements.push(ast::Close { locals }.into());
                 }
                 &Instruction::SetIndex { object, key, value } => {
+                    let Some(obj_local) = self.locals.get(&object).cloned() else { continue; };
                     let key = self.register_or_constant(key);
                     let value = self.register_or_constant(value);
 
                     statements.push(
                         ast::Assign::new(
                             vec![ast::Index {
-                                left: Box::new(self.locals[&object].clone().into()),
+                                left: Box::new(obj_local.into()),
                                 right: Box::new(key),
                             }
                             .into()],
@@ -691,20 +749,20 @@ impl<'a, 'b> Lifter<'a, 'b> {
                     );
                 }
                 Instruction::InitNumericForLoop { control, .. } => {
-                    let (internal_counter, limit, step) = (
-                        self.locals[&control[0]].clone(),
-                        self.locals[&control[1]].clone(),
-                        self.locals[&control[2]].clone(),
-                    );
+                    let (Some(internal_counter), Some(limit), Some(step)) = (
+                        self.locals.get(&control[0]).cloned(),
+                        self.locals.get(&control[1]).cloned(),
+                        self.locals.get(&control[2]).cloned(),
+                    ) else { continue; };
                     statements.push(ast::NumForInit::new(internal_counter, limit, step).into());
                 }
                 &Instruction::IterateNumericForLoop { ref control, skip } => {
-                    let (internal_counter, limit, step, external_counter) = (
-                        self.locals[&control[0]].clone(),
-                        self.locals[&control[1]].clone(),
-                        self.locals[&control[2]].clone(),
-                        self.locals[&control[3]].clone(),
-                    );
+                    let (Some(internal_counter), Some(limit), Some(step), Some(external_counter)) = (
+                        self.locals.get(&control[0]).cloned(),
+                        self.locals.get(&control[1]).cloned(),
+                        self.locals.get(&control[2]).cloned(),
+                        self.locals.get(&control[3]).cloned(),
+                    ) else { continue; };
                     statements.push(
                         ast::NumForNext::new(internal_counter.clone(), limit.into(), step.into())
                             .into(),
@@ -736,13 +794,14 @@ impl<'a, 'b> Lifter<'a, 'b> {
                     internal_control,
                     vars,
                 } => {
-                    let generator = self.locals[generator].clone();
-                    let state = self.locals[state].clone();
-                    let internal_control = self.locals[internal_control].clone();
+                    let Some(generator) = self.locals.get(generator).cloned() else { continue; };
+                    let Some(state) = self.locals.get(state).cloned() else { continue; };
+                    let Some(internal_control) = self.locals.get(internal_control).cloned() else { continue; };
                     let vars = vars
                         .iter()
-                        .map(|x| self.locals[x].clone())
+                        .filter_map(|x| self.locals.get(x).cloned())
                         .collect::<Vec<_>>();
+                    if vars.is_empty() { continue; }
                     let control = vars[0].clone();
                     statements.push(
                         ast::Assign::new(

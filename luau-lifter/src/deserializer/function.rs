@@ -154,11 +154,11 @@ impl Function {
         };
         let input = match le_u8(input)? {
             (input, 0) => input,
-            (input, _) => {
+            (_input, _) => {
                 panic!("we have debug info");
                 #[allow(unreachable_code)]
                 {
-                    let (mut input, num_locvars) = leb128_usize(input)?;
+                    let (mut input, num_locvars) = leb128_usize(_input)?;
                     for _ in 0..num_locvars {
                         (input, _) = leb128_usize(input)?;
                         (input, _) = leb128_usize(input)?;
