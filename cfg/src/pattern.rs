@@ -2,7 +2,7 @@ use std::fmt;
 
 use petgraph::{
     stable_graph::{NodeIndex, StableDiGraph},
-    visit::{Dfs, EdgeRef},
+    visit::{Dfs, EdgeRef, Walker},
     Direction,
 };
 use rustc_hash::{FxHashMap, FxHashSet};
