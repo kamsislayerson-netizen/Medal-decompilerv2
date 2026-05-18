@@ -1,4 +1,4 @@
-#![feature(box_patterns)]
+// box_patterns removed: feature was declared but not used
 
 use ast::{
     local_declarations::LocalDeclarer, name_locals::name_locals, replace_locals::replace_locals,
@@ -42,19 +42,11 @@ pub fn decompile_bytecode(bytecode: &[u8]) -> String {
                 )
                 .flat_map(|(i, g)| g.into_iter().map(move |u| (u, i.clone())))
                 .collect::<IndexMap<_, _>>();
-            // TODO: do we even need this?
             let local_to_group = local_groups
                 .into_iter()
                 .enumerate()
                 .flat_map(|(i, g)| g.into_iter().map(move |l| (l, i)))
                 .collect::<FxHashMap<_, _>>();
-            // TODO: REFACTOR: some way to write a macro that states
-            // if cfg::ssa::inline results in change then structure_jumps, structure_compound_conditionals,
-            // structure_for_loops and remove_unnecessary_params must run again.
-            // if structure_compound_conditionals results in change then dominators and post dominators
-            // must be recalculated.
-            // etc.
-            // the macro could also maybe generate an optimal ordering?
             let mut changed = true;
             while changed {
                 changed = false;
@@ -65,16 +57,11 @@ pub fn decompile_bytecode(bytecode: &[u8]) -> String {
                 ssa::inline::inline(&mut function, &local_to_group, &upvalue_to_group);
 
                 if structure_conditionals(&mut function)
-                // || {
-                //     let post_dominators = post_dominators(function.graph_mut());
-                //     structure_for_loops(&mut function, &dominators, &post_dominators)
-                // }
                     || structure_method_calls(&mut function)
                 {
                     changed = true;
                 }
                 let mut local_map = FxHashMap::default();
-                // TODO: loop until returns false?
                 if ssa::construct::remove_unnecessary_params(&mut function, &mut local_map) {
                     changed = true;
                 }
@@ -92,7 +79,6 @@ pub fn decompile_bytecode(bytecode: &[u8]) -> String {
             let is_variadic = function.is_variadic;
             let block = Arc::new(restructure::lift(function).into());
             LocalDeclarer::default().declare_locals(
-                // TODO: why does block.clone() not work?
                 Arc::clone(&block),
                 &upvalues_in.iter().chain(params.iter()).cloned().collect(),
             );
@@ -125,8 +111,6 @@ fn link_upvalues(
             if let ast::RValue::Closure(closure) = rvalue {
                 let old_upvalues = upvalues.remove(&closure.function).unwrap();
                 let mut function = closure.function.lock();
-                // TODO: inefficient, try constructing a map of all up -> new up first
-                // and then call replace_locals on main body
                 let mut local_map =
                     FxHashMap::with_capacity_and_hasher(old_upvalues.len(), Default::default());
                 for (old, new) in
@@ -136,7 +120,6 @@ fn link_upvalues(
                             ast::Upvalue::Copy(l) | ast::Upvalue::Ref(l) => l,
                         }))
                 {
-                    // println!("{} -> {}", old, new);
                     local_map.insert(old.clone(), new.clone());
                 }
                 link_upvalues(&mut function.body, upvalues);
