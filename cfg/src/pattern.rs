@@ -2,7 +2,7 @@ use std::fmt;
 
 use petgraph::{
     stable_graph::{NodeIndex, StableDiGraph},
-    visit::{Dfs, EdgeRef, Walker},
+    visit::{Dfs, EdgeRef},
     Direction,
 };
 use rustc_hash::{FxHashMap, FxHashSet};
@@ -36,12 +36,14 @@ pub type PatternEdge = BlockEdge;
 pub type PatternGraph = StableDiGraph<PatternNode, PatternEdge>;
 
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct Pattern {
     root: NodeIndex,
     graph: PatternGraph,
 }
 
 impl Pattern {
+    #[allow(dead_code)]
     fn new(root: NodeIndex, graph: PatternGraph) -> Self {
         // make sure all nodes in pattern are connected
         assert!(Dfs::new(&graph, root).iter(&graph).count() == graph.node_count());
@@ -50,6 +52,7 @@ impl Pattern {
 }
 
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct PatternChecker<'a> {
     pattern: &'a Pattern,
     function: &'a Function,
@@ -57,6 +60,7 @@ pub struct PatternChecker<'a> {
     mapping: FxHashMap<NodeIndex, NodeIndex>,
 }
 
+#[allow(dead_code)]
 impl<'a> PatternChecker<'a> {
     fn check_successors(&self, _node: NodeIndex) {}
 
@@ -99,6 +103,7 @@ impl<'a> PatternChecker<'a> {
 }
 
 impl Pattern {
+    #[allow(dead_code)]
     fn node_matches(&self, _function: &Function, _node: NodeIndex) -> bool {
         let _mapping = FxHashMap::<NodeIndex, NodeIndex>::default();
 
