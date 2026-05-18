@@ -7,6 +7,7 @@ use nom::{
 use num_derive::{FromPrimitive, ToPrimitive};
 use num_traits::FromPrimitive;
 
+#[allow(non_local_definitions)]
 #[derive(Debug, FromPrimitive, ToPrimitive)]
 pub enum OperationCode {
     Move = 0,
