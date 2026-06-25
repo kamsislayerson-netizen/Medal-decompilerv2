@@ -497,10 +497,11 @@ impl<'a, 'b> Lifter<'a, 'b> {
                         vec![value.clone()],
                     );
 
-                    self.function
-                        .block_mut(self.nodes[&(end + 1)])
-                        .unwrap()
-                        .push(assign.into());
+                    if let Some(&next_node) = self.nodes.get(&(end + 1)) {
+                        if let Some(block) = self.function.block_mut(next_node) {
+                            block.push(assign.into());
+                        }
+                    }
                 }
                 &Instruction::PrepMethodCall {
                     destination,
